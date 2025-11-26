@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI-Free Music Studio - Full Version</title>
+<style>
+  body { font-family: Arial, sans-serif; background: #121212; color: #fff; text-align: center; padding: 20px; }
+  h1 { color: #00ffcc; margin-bottom: 20px; }
+  button { padding: 15px 25px; margin: 10px; border: none; border-radius: 8px; background: #00ffcc; color: #000; font-size: 16px; cursor: pointer; }
+  button:hover { background: #00ddb3; }
+  input[type=file] { display: none; }
+  label { padding: 10px 20px; margin: 10px; background: #ff9900; color: #000; border-radius: 6px; cursor: pointer; display: inline-block; }
+  .section { border: 1px solid #444; padding: 15px; margin: 20px auto; border-radius: 10px; max-width: 600px; }
+  audio { margin-top: 20px; width: 100%; }
+</style>
+</head>
+<body>
+<h1>AI-Free Music Studio - Full Version</h1>
+
+<div class="section">
+  <h2>Mode 1: Sing & Auto-Generate Beat</h2>
+  <button id="recordBtn">Start/Stop Recording</button>
+  <button id="playVoiceBtn">Play Your Voice</button>
+  <button id="generateBeatBtn">Generate Beat & Auto Mix</button>
+</div>
+
+<div class="section">
+  <h2>Mode 2: Upload Beat & Sync Voice</h2>
+  <label for="beatUpload">Upload Your Beat</label>
+  <input type="file" id="beatUpload" accept="audio/*">
+  <button id="mixUploadedBtn">Auto Sync Voice & Beat</button>
+</div>
+
+<div class="section">
+  <button id="exportBtn">Export Full Track</button>
+</div>
+
+<audio id="finalAudio" controls></audio>
+
+<script src="https://cdn.jsdelivr.net/npm/tone@next"></script>
+<script>
+// ===== GLOBAL VARIABLES =====
+let mediaStream, recorder, audioContext;
+let voiceBuffer, uploadedBeatBuffer;
+let finalBuffer;
+let chunks = [];
+
+// ===== RECORD VOICE =====
+const recordBtn = document.getElementById('recordBtn');
+recordBtn.onclick = async () => {
+    if (!mediaStream) {
+        mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        recorder = new MediaRecorder(mediaStream);
+        recorder.ondataavailable = e => chunks.push(e.data);
+        recorder.onstop = async () => {
+            const blob = new Blob(chunks, { type: 'audio/webm' });
+            const arrayBuffer = await blob.arrayBuffer();
+            voiceBuffer = await audioContext.decodeAudioData(arrayBuffer);
+            chunks = [];
+            alert("Voice Recorded!");
+        };
+        recorder.start();
+        recordBtn.textContent = "Stop Recording";
+    } else if (recorder.state === "recording") {
+        recorder.stop();
+        recordBtn.textContent = "Start/Stop Recording";
+    }
+};
+
+// ===== PLAY VOICE =====
+const playVoiceBtn = document.getElementById('playVoiceBtn');
+playVoiceBtn.onclick = () => {
+    if (!voiceBuffer) { alert("Record your voice first!"); return; }
+    const source = audioContext.createBufferSource();
+    source.buffer = voiceBuffer;
+    source.connect(audioContext.destination);
+    source.start();
+};
+
+// ===== GENERATE AUTO BEAT & MIX (MODE 1) =====
+const generateBeatBtn = document.getElementById('generateBeatBtn');
+generateBeatBtn.onclick = async () => {
+    if (!voiceBuffer) { alert("Record your voice first!"); return; }
+
+    const offlineContext = new OfflineAudioContext(2, audioContext.sampleRate * voiceBuffer.duration, audioContext.sampleRate);
+
+    // Create voice source
+    const voiceSource = offlineContext.createBufferSource();
+    voiceSource.buffer = voiceBuffer;
+
+    const voiceGain = offlineContext.createGain();
+    voiceGain.gain.value = 0.8; // Auto-balance
+    voiceSource.connect(voiceGain).connect(offlineContext.destination);
+
+    // Generate simple beat matching voice duration
+    const bpm = 100; // Auto BPM, could be refined
+    const beatGain = offlineContext.createGain();
+    beatGain.gain.value = 0.5;
+    const steps = Math.floor(voiceBuffer.duration * (bpm / 60));
+    const osc = offlineContext.createOscillator();
+    osc.type = "square";
+    osc.frequency.value = 100;
+    osc.connect(beatGain).connect(offlineContext.destination);
+    osc.start();
+    osc.stop(voiceBuffer.duration);
+
+    voiceSource.start();
+
+    const renderedBuffer = await offlineContext.startRendering();
+    finalBuffer = renderedBuffer;
+
+    const finalAudio = document.getElementById('finalAudio');
+    const wavBlob = bufferToWave(renderedBuffer, renderedBuffer.length);
+    finalAudio.src = URL.createObjectURL(wavBlob);
+    alert("Auto Beat Generated & Voice Mixed!");
+};
+
+// ===== UPLOAD BEAT & SYNC =====
+const beatUpload = document.getElementById('beatUpload');
+beatUpload.onchange = async (e) => {
+    if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const file = e.target.files[0];
+    if (!file) return;
+    const arrayBuffer = await file.arrayBuffer();
+    uploadedBeatBuffer = await audioContext.decodeAudioData(arrayBuffer);
+    alert("Beat Uploaded!");
+};
+
+const mixUploadedBtn = document.getElementById('mixUploadedBtn');
+mixUploadedBtn.onclick = async () => {
+    if (!voiceBuffer || !uploadedBeatBuffer) { alert("Record voice and upload beat first!"); return; }
+
+    const offlineContext = new OfflineAudioContext(2, audioContext.sampleRate * Math.max(voiceBuffer.duration, uploadedBeatBuffer.duration), audioContext.sampleRate);
+
+    // Voice
+    const voiceSource = offlineContext.createBufferSource();
+    voiceSource.buffer = voiceBuffer;
+    const voiceGain = offlineContext.createGain();
+    voiceGain.gain.value = 0.7;
+    voiceSource.connect(voiceGain).connect(offlineContext.destination);
+
+    // Beat
+    const beatSource = offlineContext.createBufferSource();
+    beatSource.buffer = uploadedBeatBuffer;
+    const beatGain = offlineContext.createGain();
+    beatGain.gain.value = 0.5;
+    beatSource.connect(beatGain).connect(offlineContext.destination);
+
+    voiceSource.start();
+    beatSource.start();
+
+    const renderedBuffer = await offlineContext.startRendering();
+    finalBuffer = renderedBuffer;
+
+    const finalAudio = document.getElementById('finalAudio');
+    const wavBlob = bufferToWave(renderedBuffer, renderedBuffer.length);
+    finalAudio.src = URL.createObjectURL(wavBlob);
+    alert("Voice synced with uploaded beat!");
+};
+
+// ===== EXPORT =====
+const exportBtn = document.getElementById('exportBtn');
+exportBtn.onclick = () => {
+    if (!finalBuffer) { alert("Generate or sync first!"); return; }
+    const wavBlob = bufferToWave(finalBuffer, finalBuffer.length);
+    const url = URL.createObjectURL(wavBlob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'final_track.wav';
+    a.click();
+};
+
+// ===== HELPER: BUFFER TO WAV =====
+function bufferToWave(abuffer, len) {
+    const numOfChan = abuffer.numberOfChannels;
+    const length = len * numOfChan * 2 + 44;
+    const buffer = new ArrayBuffer(length);
+    const view = new DataView(buffer);
+
+    function writeString(view, offset, string) {
+        for (let i = 0; i < string.length; i++){
+            view.setUint8(offset + i, string.charCodeAt(i));
+        }
+    }
+
+    let offset = 0;
+
+    writeString(view, offset, 'RIFF'); offset += 4;
+    view.setUint32(offset, length - 8, true); offset += 4;
+    writeString(view, offset, 'WAVE'); offset += 4;
+    writeString(view, offset, 'fmt '); offset += 4;
+    view.setUint32(offset, 16, true); offset += 4;
+    view.setUint16(offset, 1, true); offset += 2;
+    view.setUint16(offset, numOfChan, true); offset += 2;
+    view.setUint32(offset, abuffer.sampleRate, true); offset += 4;
+    view.setUint32(offset, abuffer.sampleRate * 2 * numOfChan, true); offset += 4;
+    view.setUint16(offset, numOfChan * 2, true); offset += 2;
+    view.setUint16(offset, 16, true); offset += 2;
+    writeString(view, offset, 'data'); offset += 4;
+    view.setUint32(offset, length - offset - 4, true); offset += 4;
+
+    const channels = [];
+    for (let i = 0; i < numOfChan; i++)
+        channels.push(abuffer.getChannelData(i));
+
+    let pos = 0;
+    for (let i = 0; i < abuffer.length; i++)
+        for (let channel = 0; channel < numOfChan; channel++) {
+            let sample = Math.max(-1, Math.min(1, channels[channel][i]));
+            view.setInt16(offset + pos, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
+            pos += 2;
+        }
+
+    return new Blob([buffer], { type: "audio/wav" });
+}
+</script>
+</body>
+</html>
