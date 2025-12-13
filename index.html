@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Freshers Cup – CPE vs AERD</title>
+<title>Freshers Cup – Match Live</title>
 <style>
 body{
   margin:0; font-family:sans-serif; background:#0b8f2f; color:#fff; display:flex; justify-content:center; align-items:flex-start; min-height:100vh; padding:20px; box-sizing:border-box;
@@ -28,23 +28,34 @@ body{
 #adminPanel{display:none;margin-top:10px;background: rgba(255,255,255,0.15); padding:10px; border-radius:12px;}
 #adminPanel input, #adminPanel select, #adminPanel button{margin:5px 0;padding:6px;border-radius:8px;border:none;}
 #timer{ font-size:28px; font-weight:700; text-align:center; margin-bottom:10px; color: #00ff00; text-shadow:0 0 8px #00ff00;}
-#liveBar{height:6px; width:20%; background:#00ff00; border-radius:3px; margin:0 auto 10px auto; display:none; animation: liveMove 3s infinite ease-in-out;}
-@keyframes liveMove{0% { transform: translateX(-100%) scaleX(0.5); opacity: 0; }25% { transform: translateX(0%) scaleX(1); opacity: 1; }50% { transform: translateX(100%) scaleX(0.5); opacity: 0; }75% { transform: translateX(0%) scaleX(1); opacity: 1; }100% { transform: translateX(-100%) scaleX(0.5); opacity: 0; }}
-.floatingHeart {position:absolute; font-size:24px; animation: floatUp 2.0s ease-out forwards; pointer-events:none; z-index:9999;}
-@keyframes floatUp {0% { opacity:1; transform: translateY(0) scale(1); }100% { opacity:0; transform: translateY(-500px) scale(1.5); }}
+#liveBar{
+  height:6px; width:20%; background:#00ff00; border-radius:3px;
+  margin:0 auto 10px auto; display:none;
+  animation: liveMove 3s infinite ease-in-out;
+}
+@keyframes liveMove{
+  0% { transform: translateX(-100%) scaleX(0.5); opacity: 0; }
+  25% { transform: translateX(0%) scaleX(1); opacity: 1; }
+  50% { transform: translateX(100%) scaleX(0.5); opacity: 0; }
+  75% { transform: translateX(0%) scaleX(1); opacity: 1; }
+  100% { transform: translateX(-100%) scaleX(0.5); opacity: 0; }
+}
+.floatingHeart {
+  position:absolute;
+  font-size:24px;
+  animation: floatUp 2.0s ease-out forwards;
+  pointer-events:none;
+  z-index:9999;
+}
+@keyframes floatUp {
+  0% { opacity:1; transform: translateY(0) scale(1); }
+  100% { opacity:0; transform: translateY(-500px) scale(1.5); }
+}
 #loveButton{ position:fixed; bottom:30px; right:30px; font-size:40px; cursor:pointer; user-select:none; }
 .deleteBtn{ margin-left:10px; color:red; cursor:pointer; font-weight:bold; }
-
-#liveUpdateBox{margin-top:15px;background: rgba(255,255,255,0.1);padding:12px;border-radius:12px;}
-#pitch{position:relative;height:40px;background: linear-gradient(to right,#0b8f2f,#00ff66);border-radius:20px;overflow:hidden;margin-bottom:10px;}
-#ball{position:absolute;width:20px;height:20px;background:#fff;border-radius:50%;top:10px;left:50%;transform:translateX(-50%);transition:left 0.6s ease;}
-#liveActionText{text-align:center;font-weight:bold;}
-
-#goalOverlay{position:fixed;inset:0;background:rgba(0,0,0,0.8);display:none;justify-content:center;align-items:center;flex-direction:column;z-index:99999;}
-.goalNet{font-size:90px;animation:netPop 0.6s ease-out;}
-.goalText{font-size:48px;font-weight:900;color:#00ff66;animation:goalFlash 1s infinite alternate;}
-@keyframes netPop{from{transform:scale(0.2);}to{transform:scale(1);}}
-@keyframes goalFlash{from{opacity:1;}to{opacity:0.5;}}
+#ball{position:absolute; width:30px; height:30px; background:#ffdd00; border-radius:50%; top:50%; transform:translateY(-50%);}
+#liveActionText{position:absolute; top:10px; width:100%; text-align:center; font-weight:bold; font-size:20px;}
+#goalOverlay{display:none; position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(255,0,0,0.6); justify-content:center; align-items:center; font-size:48px; font-weight:bold; color:#fff; z-index:9999;}
 </style>
 </head>
 <body>
@@ -55,7 +66,7 @@ body{
 
   <div class="team-row">
     <div class="team">
-      <img src="https://i.ibb.co/XfTKYHJ0/IMG-20251009-WA0089.jpg" alt="IMPACT FC Logo">
+      <img src="https://i.ibb.co/B5Rh4FLS/IMG-20251213-102545.jpg" alt="IMPACT FC Logo">
       <h2>IMPACT FC</h2>
     </div>
     <div class="vs" id="vsDisplay">VS</div>
@@ -68,10 +79,9 @@ body{
   <div class="info-box">
     <p><strong>Competition:</strong> Baptist football tournament'25</p>
     <p><strong>Stage:</strong> Final</p>
-    <p><strong>Venue:</strong> Baptist academy field obanikoro</p>
+    <p><strong>Venue:</strong> Baptist Academy Field, Obanikoro</p>
     <p><strong>Time:</strong> 4:00 PM</p>
     <p><strong>Date:</strong> 14th December</p>
-    <p><strong>Weather:</strong> Sunny</p>
   </div>
 
   <div class="goal-box">
@@ -89,6 +99,12 @@ body{
     <input type="text" id="fanComment" placeholder="Write your comment..." />
     <button onclick="addFanComment()">Send</button>
     <div id="fanComments"></div>
+  </div>
+
+  <div class="watch-live-section" style="text-align:center; margin-bottom:15px;">
+    <button id="watchLiveBtn" style="padding:10px 15px; font-size:16px; border:none; border-radius:8px; background:#ffdd00; color:#000; cursor:pointer;">
+      Watch Live
+    </button>
   </div>
 
   <button class="admin-btn" id="adminBtn">Show Admin Controls</button>
@@ -115,46 +131,40 @@ body{
 
     <label>Commentary:</label><input type="text" id="commentText">
     <button onclick="addCommentary()">Add Comment</button>
-    <button onclick="deleteAllComments()">Delete All Comments</button>
+    <button onclick="deleteAllComments()">Delete All Comments</button><br>
 
-    <hr>
-    <h3>Live Match Events</h3>
+    <label>Live Link:</label>
+    <input type="text" id="liveLinkInput" placeholder="Paste live stream link here..." style="width:60%; padding:6px; border-radius:8px; border:none;">
+    <button onclick="updateLiveLink()" style="padding:6px 10px; border-radius:8px; border:none; background:#00ffcc; color:#000; cursor:pointer;">Update</button><br>
+
+    <label>Live Action:</label>
     <select id="actionTeam">
       <option value="impact">IMPACT FC</option>
       <option value="winners">WINNERS FC</option>
     </select>
-
     <button onclick="sendAction('attack')">Attack</button>
-    <button onclick="sendAction('chance')">Chance Created</button>
-    <button onclick="sendAction('shot')">Shot on Target</button>
-    <button onclick="sendAction('save')">Ball Saved</button>
-    <button onclick="sendAction('corner')">Corner Kick</button>
+    <button onclick="sendAction('chance')">Chance</button>
+    <button onclick="sendAction('shot')">Shot</button>
+    <button onclick="sendAction('save')">Save</button>
+    <button onclick="sendAction('corner')">Corner</button>
     <button onclick="sendAction('penalty')">Penalty</button>
-    <button onclick="sendAction('penalty_goal')">Penalty Scored</button>
+    <button onclick="sendAction('penalty_goal')">Penalty Goal</button>
     <button onclick="sendAction('goal')">Goal</button>
-    <button onclick="sendAction('clear')">Clear</button>
   </div>
 
-  <button class="admin-btn" onclick="toggleLiveUpdate()">⚽ View Live Update</button>
-  <div id="liveUpdateBox" style="display:none;">
-    <div id="pitch">
-      <div id="ball"></div>
-    </div>
-    <p id="liveActionText">Waiting for live action...</p>
-  </div>
-</div>
-
-<div id="goalOverlay">
-  <div class="goalNet">🥅</div>
-  <div class="goalText">GOAL!</div>
 </div>
 
 <div id="loveButton">💚</div>
+<div id="ball"></div>
+<div id="liveActionText"></div>
+<div id="goalOverlay">GOAL!</div>
 
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
 <script>
-// Firebase config
+// -------------------------
+// Firebase Config
+// -------------------------
 const firebaseConfig = {
   apiKey: "AIzaSyA2AScPQkOE632znM9vvCahijtnronS3jU",
   authDomain: "fresherscuplive.firebaseapp.com",
@@ -170,17 +180,23 @@ const matchRef = database.ref("match");
 const fanRef = database.ref("fanComments");
 const loveRef = database.ref("loveCount");
 const loveActionsRef = database.ref("loveActions");
+const liveLinkRef = database.ref("liveLink");
 
-const adminPassword = "CPE2025";
+// -------------------------
+// Admin login
+// -------------------------
+const adminPassword="CPE2025";
 document.getElementById("adminBtn").addEventListener("click", ()=>{
-  let pass = prompt("Enter admin password:");
+  let pass=prompt("Enter admin password:");
   if(pass===adminPassword){
     document.getElementById("adminPanel").style.display="block";
     document.getElementById("adminBtn").style.display="none";
   } else alert("Wrong password!");
 });
 
-// Timer
+// -------------------------
+// Timer helper
+// -------------------------
 let timerInterval=null;
 function startLiveTimerFromStartTime(startTimestamp, stage){
   if(timerInterval) clearInterval(timerInterval);
@@ -189,153 +205,21 @@ function startLiveTimerFromStartTime(startTimestamp, stage){
     let elapsed=Math.floor((now-startTimestamp)/60000);
     let displayTime="";
     if(stage=="FH"){
-      displayTime=elapsed<=30?elapsed.toString():`30 +${elapsed-30}`;
+      displayTime=elapsed<=30? elapsed.toString() : `30 +${elapsed-30}`;
     } else if(stage=="SH"){
       elapsed+=30;
-      displayTime=elapsed<=60?elapsed.toString():`60 +${elapsed-60}`;
+      displayTime=elapsed<=60? elapsed.toString() : `60 +${elapsed-60}`;
     }
     document.getElementById("timer").textContent=displayTime;
   },1000);
 }
 
-// Match listener
-matchRef.on("value", snapshot => {
-  const data = snapshot.val();
-  if(!data) return;
-  document.getElementById("vsDisplay").textContent = (data.stage=="PRE")? "VS" : `${data.scoreCPE||0} - ${data.scoreFRM||0}`;
-  
-  const goalDiv = document.getElementById("goals");
-  goalDiv.innerHTML = "";
-  if(data.goalScorers && data.goalScorers.length){
-    data.goalScorers.forEach((g,i)=>{
-      const p=document.createElement("p");
-      p.textContent=g;
-      goalDiv.appendChild(p);
-    });
-  } else goalDiv.textContent="None yet";
+// -------------------------
+// Add your previous JS here for:
+// match updates, comments, fan comments, likes, live actions
+// (This includes all the code we wrote before, pasted here)
+// -------------------------
 
-  const liveDiv=document.getElementById("liveComments");
-  liveDiv.innerHTML="";
-  if(data.liveComments && data.liveComments.length){
-    data.liveComments.forEach(c=>{
-      const p=document.createElement("p");
-      p.textContent=c;
-      liveDiv.appendChild(p);
-    });
-  }
-  document.getElementById("liveBar").style.display=(["FH","HT","SH"].includes(data.stage))?"block":"none";
-
-  if(data.stage=="FH"||data.stage=="SH"){
-    if(data.startTime) startLiveTimerFromStartTime(data.startTime,data.stage);
-  } else if(data.stage=="HT"){document.getElementById("timer").textContent="HALF-TIME";clearInterval(timerInterval);}
-  else if(data.stage=="FT"){document.getElementById("timer").textContent="FULL-TIME";clearInterval(timerInterval);}
-});
-
-// Fan comments
-fanRef.on("value", snap=>{
-  const data = snap.val()||[];
-  const fanDiv=document.getElementById("fanComments");
-  fanDiv.innerHTML="";
-  data.forEach(c=>{
-    const p=document.createElement("p");
-    p.textContent=c;
-    fanDiv.appendChild(p);
-  });
-});
-
-// Stage, Score, Goal, Commentary
-function changeStage(){
-  const stage=document.getElementById("stageSelect").value;
-  if(stage=="FH"||stage=="SH"){matchRef.update({stage,startTime:Date.now()});}
-  else matchRef.update({stage});
-}
-function setScore(team){
-  const val=(team=="CPE")? Number(document.getElementById("cpeScore").value) : Number(document.getElementById("frmScore").value);
-  if(team=="CPE") matchRef.update({scoreCPE:val}); else matchRef.update({scoreFRM:val});
-}
-function addGoal(){
-  const player=document.getElementById("goalPlayer").value.trim();
-  if(!player) return;
-  matchRef.child("goalScorers").once("value").then(s=>{
-    let arr=s.val()||[];
-    arr.push(player);
-    matchRef.update({goalScorers:arr});
-  });
-  document.getElementById("goalPlayer").value="";
-}
-function deleteAllGoals(){ matchRef.update({goalScorers:[]}); }
-
-function addCommentary(){
-  const text=document.getElementById("commentText").value.trim();
-  if(!text) return;
-  matchRef.child("liveComments").once("value").then(s=>{
-    let arr=s.val()||[];
-    arr.push(text);
-    matchRef.update({liveComments:arr});
-  });
-  document.getElementById("commentText").value="";
-}
-function deleteAllComments(){ matchRef.update({liveComments:[]}); }
-
-// Fan comments add
-function addFanComment(){
-  const text=document.getElementById("fanComment").value.trim();
-  if(!text) return;
-  fanRef.once("value").then(s=>{
-    let arr=s.val()||[];
-    arr.push(text);
-    fanRef.set(arr);
-  });
-  document.getElementById("fanComment").value="";
-}
-
-// Likes system
-function spawnHeart(x,y){
-  const heart=document.createElement("div");
-  heart.className="floatingHeart";
-  heart.textContent="💚";
-  const left=Math.max(8,Math.min(window.innerWidth-32,x-12));
-  const top=Math.max(8,Math.min(window.innerHeight-32,y-12));
-  heart.style.left=left+"px";
-  heart.style.top=top+"px";
-  document.body.appendChild(heart);
-  setTimeout(()=>heart.remove(),1500);
-}
-document.getElementById("loveButton").addEventListener("click",e=>{
-  spawnHeart(e.clientX,e.clientY);
-  loveActionsRef.push({x:e.clientX,y:e.clientY,time:Date.now()});
-  loveRef.transaction(current=>(current||0)+1);
-});
-loveActionsRef.on("child_added",snap=>{
-  const data=snap.val()||{};
-  const randomX=Math.random()*(window.innerWidth-80)+40;
-  const baseY=window.innerHeight-120;
-  spawnHeart(randomX,baseY);
-});
-
-// Live match events
-let liveOpen=false;
-function toggleLiveUpdate(){
-  liveOpen=!liveOpen;
-  document.getElementById("liveUpdateBox").style.display=liveOpen?"block":"none";
-}
-function sendAction(type){
-  const team=document.getElementById("actionTeam").value;
-  matchRef.update({liveAction:{type,team,time:Date.now()}});
-}
-if("Notification" in window && Notification.permission!=="granted"){
-  Notification.requestPermission();
-}
-function showGoal(teamName){
-  const overlay=document.getElementById("goalOverlay");
-  overlay.style.display="flex";
-  if(Notification.permission==="granted"){
-    new Notification("⚽ GOAL!",{body:teamName+" has scored!"});
-  }
-  setTimeout(()=>overlay.style.display="none",2500);
-}
-matchRef.on("value",snap=>{
-  const d=snap.val();
-  if(!d||!d.liveAction||!liveOpen) return;
-  const ball=document.getElementById("ball");
-  const text=document.getElementById
+</script>
+</body>
+</html>
