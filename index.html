@@ -15,8 +15,7 @@ body{
 .team{text-align:center; flex:1;}
 .team img{width:80px; height:80px; border-radius:50%; border:3px solid #fff; margin-bottom:10px;}
 .team h2{margin:0; font-size:22px;}
-.score{font-size:48px; font-weight:bold; color:#00ffcc; margin-top:5px;}
-.vs{font-size:32px; font-weight:700; color:#ffdd00; margin:0 10px;}
+.score-container{display:flex; justify-content:center; align-items:center; font-size:36px; font-weight:bold; color:#00ffcc; margin-top:5px; gap:20px;}
 .info-box{background: rgba(255,255,255,0.1); padding:15px; border-radius:12px; margin-bottom:20px;}
 .goal-box{background: rgba(255,255,255,0.1); padding:12px; border-radius:12px; margin-bottom:15px;}
 .commentary{background: rgba(255,255,255,0.1); border-radius:12px; padding:12px; max-height:150px; overflow-y:auto; margin-bottom:15px;}
@@ -24,37 +23,17 @@ body{
 .fan-section input{width:70%; padding:6px; border-radius:8px; border:none; margin-right:5px;}
 .fan-section button{padding:6px 10px; border-radius:8px; border:none; cursor:pointer; background:#ffdd00; color:#000;}
 #fanComments p { background: rgba(255,255,255,0.1); padding:8px; border-radius:8px; margin:4px 0; display:flex; justify-content:space-between; align-items:center;}
+.deleteBtn{ margin-left:10px; color:red; cursor:pointer; font-weight:bold;}
 .admin-btn{background:#ffdd00;color:#000;border:none;padding:8px 15px;border-radius:12px;cursor:pointer;margin-bottom:10px;}
 #adminPanel{display:none;margin-top:10px;background: rgba(255,255,255,0.15); padding:10px; border-radius:12px;}
 #adminPanel input, #adminPanel select, #adminPanel button{margin:5px 0;padding:6px;border-radius:8px;border:none;}
 #timer{ font-size:28px; font-weight:700; text-align:center; margin-bottom:10px; color: #00ff00; text-shadow:0 0 8px #00ff00;}
-#liveBar{
-  height:6px; width:20%; background:#00ff00; border-radius:3px;
-  margin:0 auto 10px auto; display:none;
-  animation: liveMove 3s infinite ease-in-out;
-}
-@keyframes liveMove{
-  0% { transform: translateX(-100%) scaleX(0.5); opacity: 0; }
-  25% { transform: translateX(0%) scaleX(1); opacity: 1; }
-  50% { transform: translateX(100%) scaleX(0.5); opacity: 0; }
-  75% { transform: translateX(0%) scaleX(1); opacity: 1; }
-  100% { transform: translateX(-100%) scaleX(0.5); opacity: 0; }
-}
-.floatingHeart {
-  position:absolute;
-  font-size:24px;
-  animation: floatUp 2.0s ease-out forwards;
-  pointer-events:none;
-  z-index:9999;
-  color:#ff4444; /* red hearts */
-}
-@keyframes floatUp {
-  0% { opacity:1; transform: translateY(0) scale(1); }
-  100% { opacity:0; transform: translateY(-500px) scale(1.5); }
-}
+#liveBar{height:6px; width:20%; background:#00ff00; border-radius:3px;margin:0 auto 10px auto; display:none;animation: liveMove 3s infinite ease-in-out;}
+@keyframes liveMove{0% { transform: translateX(-100%) scaleX(0.5); opacity: 0; }25% { transform: translateX(0%) scaleX(1); opacity: 1; }50% { transform: translateX(100%) scaleX(0.5); opacity: 0; }75% { transform: translateX(0%) scaleX(1); opacity: 1; }100% { transform: translateX(-100%) scaleX(0.5); opacity: 0; }}
+.floatingHeart { position:absolute; font-size:24px; animation: floatUp 2.0s ease-out forwards; pointer-events:none; z-index:9999; color:#ff4444; }
+@keyframes floatUp { 0% { opacity:1; transform: translateY(0) scale(1); } 100% { opacity:0; transform: translateY(-500px) scale(1.5); } }
 #loveButton{ position:fixed; bottom:30px; right:30px; font-size:40px; cursor:pointer; user-select:none; }
 #likeCount{position:fixed; bottom:90px; right:40px; font-size:24px; font-weight:bold; color:#ff4444;}
-.deleteBtn{ margin-left:10px; color:red; cursor:pointer; font-weight:bold;}
 #watchLiveBtn{margin:15px 0; display:block; padding:8px 15px; background:#ffdd00; color:#000; font-weight:bold; border:none; border-radius:12px; cursor:pointer; text-align:center;}
 </style>
 </head>
@@ -69,7 +48,9 @@ body{
       <img src="https://i.ibb.co/B5Rh4FLS/IMG-20251213-102545.jpg" alt="IMPACT FC Logo">
       <h2>IMPACT FC</h2>
     </div>
-    <div class="vs" id="vsDisplay">VS</div>
+    <div class="score-container" id="scoreDisplay">
+      <span id="scoreIMPACT">0</span> - <span id="scoreWINNERS">0</span>
+    </div>
     <div class="team">
       <img src="https://i.ibb.co/ZR2JGNvc/IMG-20251213-102622.jpg" alt="WINNERS FC Logo">
       <h2>WINNERS FC</h2>
@@ -99,6 +80,7 @@ body{
 
   <div class="fan-section">
     <h3>Fan Comments ❤️</h3>
+    <input type="text" id="fanName" placeholder="Your name..." />
     <input type="text" id="fanComment" placeholder="Write your comment..." />
     <button onclick="addFanComment()">Send</button>
     <div id="fanComments"></div>
@@ -156,7 +138,6 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// Admin
 const adminPassword = "CPE2025";
 document.getElementById("adminBtn").addEventListener("click", ()=>{
   let pass = prompt("Enter admin password:");
@@ -166,24 +147,23 @@ document.getElementById("adminBtn").addEventListener("click", ()=>{
   } else alert("Wrong password!");
 });
 
-// Refs
 const matchRef = db.ref("match");
 const fanRef = db.ref("fanComments");
 const liveRef = db.ref("liveLink");
 const loveRef = db.ref("loveCount");
 const loveActionsRef = db.ref("loveActions");
 
-// Timer
 let timerInterval=null;
-let halfDuration = 30;
+let halfDuration=30;
 
 // Match listener
 matchRef.on("value", snapshot=>{
   const data = snapshot.val()||{};
-  document.getElementById("vsDisplay").textContent = (data.stage=="PRE") ? "VS" : `${data.scoreIMPACT||0} - ${data.scoreWINNERS||0}`;
+  document.getElementById("scoreIMPACT").textContent=data.scoreIMPACT||0;
+  document.getElementById("scoreWINNERS").textContent=data.scoreWINNERS||0;
 
-  const goalsDiv = document.getElementById("goals");
-  goalsDiv.innerHTML = "";
+  const goalsDiv=document.getElementById("goals");
+  goalsDiv.innerHTML="";
   if(data.goalScorers && data.goalScorers.length){
     data.goalScorers.forEach((g,i)=>{
       const p=document.createElement("p");
@@ -210,14 +190,22 @@ matchRef.on("value", snapshot=>{
   else if(data.stage=="FT"){ document.getElementById("timer").textContent="FULL-TIME"; clearInterval(timerInterval);}
 });
 
-// Fan comments
+// Fan comments listener
 fanRef.on("value", snapshot=>{
   const data = snapshot.val()||[];
   const fanDiv = document.getElementById("fanComments");
   fanDiv.innerHTML="";
-  data.forEach(c=>{
-    const p=document.createElement("p");
-    p.textContent=c;
+  data.forEach((c,i)=>{
+    const p = document.createElement("p");
+    p.textContent=c.text;
+    // Delete button for user (if name matches)
+    if(c.user==localStorage.getItem("fanName") || adminPassword){
+      const btn = document.createElement("span");
+      btn.textContent="❌";
+      btn.className="deleteBtn";
+      btn.onclick=()=>deleteFanComment(i);
+      p.appendChild(btn);
+    }
     fanDiv.appendChild(p);
   });
 });
@@ -229,7 +217,27 @@ function addGoal(){ const player=document.getElementById("goalPlayer").value.tri
 function deleteAllGoals(){ matchRef.update({goalScorers:[]}); }
 function addCommentary(){ const text=document.getElementById("commentText").value.trim(); if(!text) return; matchRef.child("liveComments").once("value").then(s=>{ let arr=s.val()||[]; arr.push(text); matchRef.update({liveComments:arr}); }); document.getElementById("commentText").value=""; }
 function deleteAllComments(){ matchRef.update({liveComments:[]}); }
-function addFanComment(){ const text=document.getElementById("fanComment").value.trim(); if(!text) return; fanRef.once("value").then(s=>{ let arr=s.val()||[]; arr.push(text); fanRef.set(arr); }); document.getElementById("fanComment").value=""; }
+
+function addFanComment(){
+  const name=document.getElementById("fanName").value.trim();
+  const text=document.getElementById("fanComment").value.trim();
+  if(!name||!text) return alert("Enter name and comment");
+  localStorage.setItem("fanName",name);
+  fanRef.once("value").then(s=>{
+    let arr=s.val()||[];
+    arr.push({user:name,text:text});
+    fanRef.set(arr);
+  });
+  document.getElementById("fanComment").value="";
+}
+
+function deleteFanComment(i){
+  fanRef.once("value").then(s=>{
+    let arr=s.val()||[];
+    arr.splice(i,1);
+    fanRef.set(arr);
+  });
+}
 
 // Timer
 function startLiveTimer(startTime,stage){ if(timerInterval) clearInterval(timerInterval); timerInterval=setInterval(()=>{ let elapsed=Math.floor((Date.now()-startTime)/60000); let display=""; if(stage=="FH") display=(elapsed<=halfDuration)? elapsed.toString() : `${halfDuration}+${elapsed-halfDuration}`; else if(stage=="SH"){ elapsed+=halfDuration; display=(elapsed<=halfDuration*2)? elapsed.toString() : `${halfDuration*2}+${elapsed-halfDuration*2}`;} document.getElementById("timer").textContent=display; },1000);}
@@ -255,4 +263,4 @@ loveRef.on("value", snapshot=>{
 });
 </script>
 </body>
-</html>
+  </html>
